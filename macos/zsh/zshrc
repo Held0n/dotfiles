@@ -1,0 +1,99 @@
+export TERM=xterm-256color
+export LLVM11_HOME=/opt/homebrew/opt/llvm@11
+export LLVM13_HOME=/opt/homebrew/opt/llvm@13
+#export LDFLAGS="-L/opt/homebrew/opt/llvm@11/lib"
+#export CPPFLAGS="-I/opt/homebrew/opt/llvm@11/include"
+export JAVA_HOME="/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home"
+export CK_HOME="/Users/heldon/Directory/Project/clickhouse/build/programs"
+
+export PATH="$PATH:$CK_HOME"
+export PATH="$PATH:$LLVM13_HOME/bin"
+export PATH="$PATH:$LLVM11_HOME/bin"
+
+unsetopt LIST_BEEP
+
+if type brew &>/dev/null; then
+    FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
+
+    autoload -Uz compinit
+    compinit
+fi
+
+### Added by Zinit's installer
+if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
+    print -P "%F{33} %F{220}Installing %F{33}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
+    command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
+    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" && \
+        print -P "%F{33} %F{34}Installation successful.%f%b" || \
+        print -P "%F{160} The clone has failed.%f%b"
+fi
+
+source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+
+# Load a few important annexes, without Turbo
+# (this is currently required for annexes)
+zinit light-mode for \
+    zdharma-continuum/zinit-annex-as-monitor \
+    zdharma-continuum/zinit-annex-bin-gem-node \
+    zdharma-continuum/zinit-annex-patch-dl \
+    zdharma-continuum/zinit-annex-rust
+
+### End of Zinit's installer chunk
+### Plugins
+zinit light Aloxaf/fzf-tab
+zinit light-mode for \
+    zdharma-continuum/fast-syntax-highlighting \
+    zsh-users/zsh-autosuggestions \
+    zsh-users/zsh-completions \
+    hlissner/zsh-autopair
+zinit wait="1" lucid light-mode for \
+    agkozak/zsh-z
+zinit wait="1" lucid for \
+    OMZ::lib/clipboard.zsh \
+    OMZ::lib/git.zsh \
+    OMZ::lib/completion.zsh \
+    OMZ::lib/directories.zsh \
+    OMZ::lib/key-bindings.zsh \
+    OMZ::plugins/sudo/sudo.plugin.zsh \
+    OMZ::plugins/urltools/urltools.plugin.zsh \
+
+zinit ice lucid wait='0'
+zinit snippet OMZ::plugins/git/git.plugin.zsh
+zinit ice svn
+zinit svn for \
+    OMZ::plugins/extract
+zinit ice depth=1
+zinit light romkatv/powerlevel10k
+
+# disable sort when completing `git checkout`
+zstyle ':completion:*:git-checkout:*' sort false
+# set descriptions format to enable group support
+zstyle ':completion:*:descriptions' format '[%d]'
+# set list-colors to enable filename colorizing
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# preview directory's content with exa when completing cd
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -1 --color=always $realpath'
+# switch group using `,` and `.`
+zstyle ':fzf-tab:*' switch-group ',' '.'
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+#### script ####
+
+source ~/.config/script/git/*.zsh
+
+#### alias ####
+
+alias ls='exa'
+alias clear="clear && printf '\e[3J'"
+
+#### /script #####
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
