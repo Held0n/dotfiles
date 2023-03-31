@@ -1,9 +1,9 @@
 # Refers to the number of commands that are stored in the zsh history file
 export HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
 # Refers to the number of commands that are stored in the zsh history file
-export HISTSIZE=100000 
+export HISTSIZE=100000
 # Refers to the number of commands that are loaded into memory from the history file
-export SAVEHIST=100000 
+export SAVEHIST=100000
 
 setopt INC_APPEND_HISTORY
 setopt EXTENDED_HISTORY
@@ -79,5 +79,44 @@ zstyle ':fzf-tab:*' switch-group ',' '.'
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+#### env ####
+if [[ -d '/root/directory/zulu8.62.0.19-ca-jdk8.0.332-linux_x64' ]]; then
+    export JAVA_HOME='/root/directory/zulu8.62.0.19-ca-jdk8.0.332-linux_x64'
+    export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
+if [[ -d '/root/directory/apache-maven-3.8.6' ]]; then
+    export MVN_HOME='/root/directory/apache-maven-3.8.6'
+    export PATH="$MVN_HOME/bin:$PATH"
+fi
+
+if [[ -d '/root/project/redck/build/programs' ]]; then
+    export CK_DEV_HOME='/root/project/redck/build/programs'
+    export PATH="$CK_DEV_HOME:$PATH"
+fi
+
+if [[ -d '/root/directory/cmake-3.20.6-linux-x86_64' ]]; then
+    export CMAKE_HOME='/root/directory/cmake-3.20.6-linux-x86_64'
+    export PATH="$CMAKE_HOME/bin:$PATH"
+fi
+
+if [[ -d '/root/directory/cmake-3.20.6-linux-x86_64' ]]; then
+    export CMAKE_HOME='/root/directory/cmake-3.20.6-linux-x86_64'
+    export PATH="$CMAKE_HOME/bin:$PATH"
+fi
+
+if [[ -d '/usr/lib/llvm-11/bin' ]]; then
+    export LLVM11_HOME='/usr/lib/llvm-11';
+    export PATH="$LLVM11_HOME/bin:$PATH"
+fi
+
+export LESSCHARSET=utf-8
+
+#### script ####
+
+source $HOME/.config/script/*.zsh
+source $HOME/.config/script/git_functions.zsh
+
 #### alias ####
 alias ls='ls --color=auto'
+

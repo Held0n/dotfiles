@@ -49,4 +49,3 @@ function git_branch() {
     printf "$branch_operation_result\n"
   fi
 }
-
