@@ -118,7 +118,10 @@ source $HOME/.config/script/clickhouse_functions.zsh
 source $HOME/.config/script/git_functions.zsh
 
 #### alias ####
+
 alias ls='ls --color=auto'
+alias clickhouse-yandex-client='/root/project/ClickHouse/build/programs/clickhouse-client --port 9100'
+
 j() {
     [ $# -gt 0 ] && zshz "$*" && return
     cd "$(zshz -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
