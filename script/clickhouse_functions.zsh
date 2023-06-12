@@ -17,5 +17,6 @@ function redkv-cli() {
 function start_metastore() {
     local metastore_home="/root/project/clickhouse-metastore"
     cd $metastore_home
-    mvn clean compile && mvn spring-boot:run &
+    mvn clean compile 
+    mvn spring-boot:run &
 }
