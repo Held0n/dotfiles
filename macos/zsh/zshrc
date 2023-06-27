@@ -83,14 +83,20 @@ zstyle ':fzf-tab:*' switch-group ',' '.'
 
 #### script ####
 
-source ~/.config/script/git/*.zsh
+source ~/.config/script/git_functions.zsh
+source ~/.config/script/clickhouse_functions.zsh
+
+j() {
+    [ $# -gt 0 ] && zshz "$*" && return
+    cd "$(zshz -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
+}
 
 #### alias ####
 
 alias ls='exa'
 alias clear="clear && printf '\e[3J'"
 
-#### /script #####
+#### script #####
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
