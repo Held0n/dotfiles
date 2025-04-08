@@ -2,9 +2,7 @@
 extract()
 {
   if [ -f $1 ] ; then
-    local lower=$(lc $1)
-
-    case $lower in
+    case $1 in
       *.tar.bz2)   tar xvjf $1     ;;
       *.tar.gz)    tar xvzf $1     ;;
       *.bz2)       bunzip2 $1      ;;
