@@ -75,13 +75,20 @@ shopt -s cmdhist
 export LESSCHARSET=utf-8
 
 if [[ $VSCODE_INJECTION = "1" || $VSCODE_SHELL_INTEGRATION = 1 ]]; then
-    export EDITOR="code --w" # or 'code-insiders' if you're using VS Code Insiders
+  export EDITOR="code --w" # or 'code-insiders' if you're using VS Code Insiders
 fi
 
 if [ -f ~/.bash_prompt ]; then
-    . ~/.bash_prompt
+  . ~/.bash_prompt
 fi
 
 if [ -f ~/.bash_functions ]; then
-    . ~/.bash_functions
+  . ~/.bash_functions
+fi
+
+if command -v "fzf" > /dev/null 2>&1; then
+  eval "$(fzf --bash)"
+  # https://github.com/lincheney/fzf-tab-completion
+  source /home/heldon/dotfiles/bash/fzf-bash-completion.sh
+  bind -x '"\t": fzf_bash_completion'
 fi
