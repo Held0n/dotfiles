@@ -45,6 +45,46 @@ cd <该路径>
 - `ssh -T git@github.com` 验证 GitHub key 可用。
 - 如需 REDpass，自行安装；它会把自己的配置块写入 `~/.ssh/config`。
 
+## 单独 stow 某个包
+
+如果不想跑整套 bootstrap，只想同步某一个组件，直接在仓库根目录执行 `stow`：
+
+```sh
+# 部署单个包（首次 link）
+stow -v -t ~ <package>            # -t 目标目录，-v 显示动作
+
+# 例：
+stow -v -t ~ git                  # 只 link ~/.gitconfig
+stow -v -t ~ p10k-macos           # 只 link ~/.p10k.zsh
+stow -v -t ~ tmux                 # 只 link ~/.tmux.conf
+
+# 改了仓库里的文件后重新 link（处理新增/删除）
+stow -Rv -t ~ <package>
+
+# 反向 unstow（移除符号链接）
+stow -Dv -t ~ <package>
+
+# 干跑预演，不实际改文件系统
+stow -nv -t ~ <package>
+```
+
+两个坑 `bootstrap-macos.sh` 已经替你处理了 —— 手动 stow 时要自己保证：
+
+1. **stow `zsh-macos`、`ssh-config`、`nvim` 之前必须先建好目标目录**。否则 stow 会把整个子目录折叠成一个符号链接：`~/.ssh` 被折叠会让 `decrypt-ssh.sh` 把明文私钥写进仓库；`~/.config` 被折叠会强迫其他工具的子目录也进入仓库：
+   ```sh
+   mkdir -p ~/.ssh && chmod 700 ~/.ssh     # ssh-config 之前
+   mkdir -p ~/.config                      # zsh-macos 之前
+   mkdir -p ~/.config/nvim                 # nvim 之前
+   ```
+
+2. **stow `ssh-config` 之前要先写好 `~/.ssh/config` 的 Include stub**。否则 REDpass / OrbStack / coral-mutagen 会通过符号链接把它们自动生成的配置块追加到仓库里的 `my-ssh.config`，污染仓库：
+   ```sh
+   [[ -f ~/.ssh/config ]] || { printf 'Include ~/.ssh/my-ssh.config\n' > ~/.ssh/config && chmod 600 ~/.ssh/config; }
+   stow -v -t ~ ssh-config
+   ```
+
+如果 `$HOME` 中已经存在同名实体文件（比如 `~/.zshrc`），stow 会拒绝覆盖 —— 先 `mv` 走再重试。
+
 ## 日常维护
 
 | 变更 | 操作 |
