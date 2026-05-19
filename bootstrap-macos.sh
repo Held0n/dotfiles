@@ -26,6 +26,16 @@ log "Running brew bundle…"
 brew bundle --file="$REPO_ROOT/Brewfile"
 
 # --- 3. stow packages -----------------------------------------------------
+# Pre-create dirs we don't want stow to fold into single symlinks.
+# .ssh MUST be a real 700-mode dir: decrypt-ssh.sh writes plaintext keys here
+# and we don't want them landing inside ssh-config/.ssh/ in the repo.
+# .config stays a real dir so unrelated tools can add subdirs alongside ours.
+# .config/nvim stays a real dir so plugin managers (lazy.nvim etc.) write
+# installs and lockfiles locally instead of into the repo.
+mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+mkdir -p "$HOME/.config"
+[[ -d "$REPO_ROOT/nvim/.config/nvim" ]] && mkdir -p "$HOME/.config/nvim"
+
 # Always-stow: configs that should exist on every macOS box.
 ALWAYS=(zsh-macos p10k-macos git ssh-config)
 # Optional: stow only if the package directory contains files.
