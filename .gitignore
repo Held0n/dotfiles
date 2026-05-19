@@ -1,0 +1,16 @@
+# Plaintext private keys / pems must never enter git, even if encrypt-ssh.sh
+# was forgotten. .age ciphertexts are explicitly allow-listed.
+secrets/ssh/*
+!secrets/ssh/.gitkeep
+!secrets/ssh/*.age
+
+# REDpass writes ~/.ssh/config locally; if it ever leaks into the repo
+# (e.g., via a misconfigured symlink), block it from being staged.
+ssh-config/.ssh/config
+
+# iTerm2 may write a number of cruft files alongside the plist
+iterm2/*.xml
+iterm2/*Companions*
+
+# OS junk
+.DS_Store
