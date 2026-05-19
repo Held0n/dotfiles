@@ -1,0 +1,12 @@
+# Plaintext private keys / pems must never enter git, even if encrypt-ssh.sh
+# was forgotten. .age ciphertexts are explicitly allow-listed.
+secrets/ssh/*
+!secrets/ssh/.gitkeep
+!secrets/ssh/*.age
+
+# iTerm2 may write a number of cruft files alongside the plist
+iterm2/*.xml
+iterm2/*Companions*
+
+# OS junk
+.DS_Store
