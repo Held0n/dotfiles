@@ -50,7 +50,10 @@ dotfile/
 │   └── decrypt-ssh.sh             # 新 mac 用：secrets/ssh/*.age → ~/.ssh/，chmod 600
 │
 ├── zsh-macos/                     # stow 包
-│   └── .zshrc                     # → ~/.zshrc
+│   ├── .zshrc                     # → ~/.zshrc（仅入口编排，按顺序 source）
+│   └── .config/zsh/
+│       ├── macos-env.zsh          # → ~/.config/zsh/macos-env.zsh
+│       └── macos-extras.zsh       # → ~/.config/zsh/macos-extras.zsh
 ├── zsh-ubuntu/                    # stow 包（保留位置，本次不动）
 │   └── .zshrc
 │
@@ -69,7 +72,11 @@ dotfile/
 │
 ├── script/                        # 取代当前 link.sh 的功能
 │   └── .config/script/
-│       └── git_functions.zsh      # → ~/.config/script/git_functions.zsh
+│       ├── git_functions.zsh      # → ~/.config/script/git_functions.zsh
+│       └── zsh/                   # zshrc 拆分后的共享片段
+│           ├── 10-zinit.zsh
+│           ├── 20-prompt.zsh
+│           └── 30-functions.zsh
 │
 ├── iterm2/                        # 不是 stow 包，由 iTerm2 自己读
 │   └── com.googlecode.iterm2.plist
@@ -224,21 +231,88 @@ cd <自选路径>
 
 ### zshrc & p10k
 
-- `zsh-macos/.zshrc` = 现有 `macos/zsh/zshrc` 的副本，**剥离**以下行：
-  - `export CK_HOME="/Users/heldon/Directory/Project/clickhouse/build/programs"`
-  - `export PATH="$PATH:$CK_HOME"`
-  - `source ~/.config/script/clickhouse_functions.zsh`
-- **保留**两个 SSH alias，但调整路径与 decrypt-ssh 的落点对齐：
-  - `alias jump="ssh -i ~/.ssh/zhanghongtai-jumpserver.pem zhanghongtai@jumpserver.devops.xiaohongshu.com"`（pem 路径从 `/Users/heldon/...` 改为 `~/.ssh/`）
-  - `alias sr-dev='ssh -t -i ~/.ssh/starrocks-dev root@10.4.65.79 "tmux new-session -A -s main"'`（保持原样，已经是 `~/.ssh/`）
+#### 拆分
+
+把现有 `macos/zsh/zshrc` 拆成 6 个文件：
+
+**共享（3 个，放在 `script/.config/script/zsh/`，sourced by both mac & ubuntu）**
+
+| 文件 | 内容 |
+|---|---|
+| `10-zinit.zsh` | zinit installer 块 + 所有 zinit plugin 加载 + zstyle 补全配置 |
+| `20-prompt.zsh` | `[[ ! -f ~/.p10k.zsh ]] \|\| source ~/.p10k.zsh` |
+| `30-functions.zsh` | `j()` 定义 + `source ~/.config/script/git_functions.zsh` |
+
+**macOS 专属（2 个，放在 `zsh-macos/.config/zsh/`）**
+
+| 文件 | 内容 |
+|---|---|
+| `macos-env.zsh` | `TERM`、`LLVM*_HOME`、`JAVA_HOME`、`CLASSPATH`、PATH 拼接、`unsetopt LIST_BEEP`、Homebrew compinit |
+| `macos-extras.zsh` | 所有 alias（`ls=exa`、`clear`、`jump`、`sr-dev`）、focus reporting trap、`bun` 初始化、追加 `~/.local/bin` 和 `mysql-client` PATH |
+
+**入口（1 个）**
+
+`zsh-macos/.zshrc`：
+
+```sh
+source ~/.config/zsh/macos-env.zsh
+
+# 共享部分：按文件名数字前缀顺序加载
+for f in ~/.config/script/zsh/*.zsh; do source "$f"; done
+
+source ~/.config/zsh/macos-extras.zsh
+```
+
+#### 剥离 ClickHouse
+
+从 `macos-env.zsh` / `macos-extras.zsh` **不包含**以下原 zshrc 内容：
+
+- `export CK_HOME="/Users/heldon/Directory/Project/clickhouse/build/programs"`
+- `export PATH="$PATH:$CK_HOME"`
+- `source ~/.config/script/clickhouse_functions.zsh`
+
+#### SSH alias 路径对齐
+
+`macos-extras.zsh` 中保留两个 alias，但 `jump` 的 pem 路径从 `/Users/heldon/...` 改为 `~/.ssh/`，与 decrypt-ssh 的落点对齐：
+
+```sh
+alias jump="ssh -i ~/.ssh/zhanghongtai-jumpserver.pem zhanghongtai@jumpserver.devops.xiaohongshu.com"
+alias sr-dev='ssh -t -i ~/.ssh/starrocks-dev root@10.4.65.79 "tmux new-session -A -s main"'
+```
+
+#### p10k
+
 - `p10k-macos/.p10k.zsh` = 旧 mac 上 `~/.p10k.zsh` 原样拷贝；如果 `POWERLEVEL9K_MODE` 不是 `nerdfont-complete` 或 `nerdfont-v3`，改为 nerdfont 系列。
-- Ubuntu 侧（`zsh-ubuntu/`、`p10k-ubuntu/`）：保留搬运，但**本次实现不动**，留 TODO。
+- Ubuntu 侧（`zsh-ubuntu/`、`p10k-ubuntu/`）：保留位置，但**本次实现不动**，留 TODO。Ubuntu 后续重组时只需写一个 `ubuntu-env.zsh` / `ubuntu-extras.zsh` 和入口 `.zshrc` 复用同一套共享文件。
+
+### SSH 私钥清单
+
+旧 mac `~/.ssh/` 下需要加密入库的 4 对密钥：
+
+| 文件 | 类型/注释 | 用途 |
+|---|---|---|
+| `id_rsa` / `.pub` | RSA, `heldon@MAC-L16PKW0RQ7` | 公司 key，`~/.ssh/config` 中所有 `10.4.x.x` 主机都用它 |
+| `id_rsa_myself` / `.pub` | RSA, `764165887@qq.com` | 个人 key，`Host github.com` 显式使用 |
+| `coral_ed25519` / `.pub` | ed25519, `coral@desktop` | 公司内部 Coral 远程开发沙箱（基于 K8s Pod + Mutagen），对应 `# coral-mutagen` 段的 `10.40.103.79` |
+| `starrocks-dev` / `.pub` | ed25519, `starrocks-dev` | 个人开发机 key，对应 `Host qsh5-sr-dev-ax4fi-5` 和 `alias sr-dev` |
+
+`zhanghongtai-jumpserver.pem` 当前在 `/Users/heldon/` 家目录根下，迁移时**也一并加密到** `secrets/ssh/`，并由 decrypt-ssh 落到 `~/.ssh/`（`alias jump` 同步改路径）。
 
 ### SSH config
 
 - **旧 mac**：`cp ~/.ssh/config ssh-config/.ssh/config`。
 - **新 mac**：`stow ssh-config`。
 - `known_hosts` **不进仓库**，第一次连每个 host 重新 accept 指纹。
+
+#### config 内三处需要特殊处理的段落
+
+1. **REDpass UUID 段（`# REDpassSSHAgent BEGIN/END` 之间）**：拷到仓库后**手动从仓库文件中删除**。新 mac 装 REDpass 后由 REDpass 自动追加新 UUID 的段。
+2. **`Include ~/.orbstack/ssh/config`**：保留原样。新 mac 没装 OrbStack 时 ssh 会有 warning 但仍能跑；装上 OrbStack 后自动生效。
+3. **`# coral-mutagen:start/end` 段**：保留原样搬过去。Coral 工具初次连接时若发现已有段会复用 / 更新 Pod IP；如果它强制覆盖整段也无害（stow 软链会让覆盖落回仓库文件，提交前注意 review）。
+
+#### stow + 自动写入工具的固有冲突
+
+`~/.ssh/config` 是软链时，REDpass / Coral / OrbStack 等"会自动追加内容到 ssh config" 的工具会修改仓库内的源文件。这是**好事**（自动同步），但 commit 时要小心 review，别把临时段（如某次 Coral 的 Pod IP）误提交。
 
 ### iTerm2
 
