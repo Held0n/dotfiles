@@ -4,11 +4,13 @@ export LLVM13_HOME=/opt/homebrew/opt/llvm@13
 #export LDFLAGS="-L/opt/homebrew/opt/llvm@11/lib"
 #export CPPFLAGS="-I/opt/homebrew/opt/llvm@11/include"
 export JAVA_HOME="/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home"
+export CLASSPATH=".:$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH"
 export CK_HOME="/Users/heldon/Directory/Project/clickhouse/build/programs"
 
 export PATH="$PATH:$CK_HOME"
 export PATH="$PATH:$LLVM13_HOME/bin"
 export PATH="$PATH:$LLVM11_HOME/bin"
+export PATH="$PATH:$JAVA_HOME"
 
 unsetopt LIST_BEEP
 
@@ -95,11 +97,28 @@ j() {
 
 alias ls='exa'
 alias clear="clear && printf '\e[3J'"
+alias jump="ssh -i /Users/heldon/zhanghongtai-jumpserver.pem zhanghongtai@jumpserver.devops.xiaohongshu.com"
+alias sr-dev='ssh -t -i ~/.ssh/starrocks-dev root@10.4.65.79 "tmux new-session -A -s main"'
 
 #### script #####
 
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+# test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+#export NVM_DIR="$HOME/.nvm"
+#[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+#[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="/opt/homebrew/opt/mysql-client/bin:$PATH"
+
+# 重置 focus reporting，防止 SSH 断连后遗留
+_reset_focus_reporting() {
+  printf '\033[?1004l'
+}
+trap '_reset_focus_reporting' EXIT
+
+# bun completions
+[ -s "/Users/heldon/.bun/_bun" ] && source "/Users/heldon/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
