@@ -88,3 +88,13 @@ The tracked clean config lives in `ssh-config/.ssh/my-ssh.config` and is symlink
 - **p10k complains about font**: same as above.
 - **`stow` reports conflict on `.zshrc`**: an oh-my-zsh or default install left a `~/.zshrc`. `mv ~/.zshrc ~/.zshrc.preexisting && ./bootstrap-macos.sh` again.
 - **`ssh -T git@github.com` → permission denied**: `ls -la ~/.ssh/id_rsa_myself` — file should be present, perms 600. If missing, `./scripts/decrypt-ssh.sh`.
+
+use stow to manage dotfiles
+```bash
+apt install stow
+```
+
+```bash
+mv ~/.bashrc ~/.bashrc_bak
+stow bash -t ~
+```
