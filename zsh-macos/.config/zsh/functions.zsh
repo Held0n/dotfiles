@@ -1,12 +1,9 @@
-# Shared shell functions. Merged from old zshrc + script/git_functions.zsh.
-
 # Jump to a frecent directory via zshz + fzf.
 j() {
     [ $# -gt 0 ] && zshz "$*" && return
     cd "$(zshz -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
 }
 
-# --- git branch helpers (from former script/git_functions.zsh) ---
 # https://github.com/bahmutov/git-branches/blob/master/branches.sh
 list_branch_with_description() {
     branches=$(git branch --list "$1")

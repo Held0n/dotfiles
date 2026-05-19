@@ -4,20 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Personal dotfiles. No build system, no tests, no package manifest — just shell config, terminal config, and helper scripts that get installed into `$HOME` via two small bash scripts.
+Personal dotfiles for macOS, organized as **GNU stow packages**. One command (`./bootstrap-macos.sh`) takes a fresh Mac to a fully-configured working environment: Homebrew formulas/casks, zsh + powerlevel10k, iTerm2 prefs, git config, tmux/nvim configs, and SSH keys (decrypted from `age -p` ciphertext in `secrets/ssh/`).
+
+There is no build system, no tests for the configs themselves, and no package manifest. The "tests" under `tests/` only verify the bootstrap orchestration (encrypt/decrypt round-trip, stow dry-run).
 
 ## Layout and install model
 
-- `init.sh` — bootstraps an Ubuntu host (`apt-get install fzf, exa, subversion`). macOS bootstrap is not scripted; install equivalents via Homebrew manually.
-- `link.sh` — symlinks `./script` to `~/.config/script`, backing up any existing target to `~/.config/script.bak`. Run from the repo root (uses `$PWD`).
-- `macos/zsh/zshrc` and `ubuntu/zsh/zshrc` — per-OS zsh configs. **Not symlinked by `link.sh`** — copy or symlink the appropriate one to `~/.zshrc` manually.
-- `macos/kitty/` — kitty terminal config (`kitty.conf`, `session.conf`). Belongs at `~/.config/kitty/`.
-- `ubuntu/zsh/p10k.zsh` — powerlevel10k config. Belongs at `~/.p10k.zsh`.
-- `script/*.zsh` — shared zsh helper functions sourced by both `zshrc`s via `~/.config/script/...`. Edits here affect both OSes after `link.sh` has run.
+Each top-level directory (except `scripts/`, `tests/`, `docs/`, `secrets/`, and `iterm2/`) is a **stow package** whose internal structure mirrors `$HOME`:
+
+- `bootstrap-macos.sh` — orchestrator. Installs Homebrew → runs `brew bundle` → pre-creates `~/.ssh` (700) + `~/.config` → stows packages → wires iTerm2 prefs folder → runs `scripts/decrypt-ssh.sh`.
+- `Brewfile` — `brew bundle` input. `age`, `stow`, `fzf`, `jq`, and `font-maple-mono-nf` are required by bootstrap itself.
+- `scripts/encrypt-ssh.sh` / `scripts/decrypt-ssh.sh` — `age -p` symmetric encryption of SSH private keys; passphrase memorized, not stored.
+- `tests/test-roundtrip.sh` / `tests/test-bootstrap-dryrun.sh` — bash scripts run with `./tests/...`. The dry-run test stows into a `mktemp -d` and asserts each expected file resolves via `realpath` to the repo source.
+- `zsh-macos/` — `.zshrc` (entry) + `.config/zsh/{env,zinit,prompt,functions,extras}.zsh` (the entry sources these in order).
+- `zsh-ubuntu/` — verbatim copy of the old Ubuntu zshrc; NOT refactored into the 6-file split. Still sources `~/.config/script/*.zsh` paths that no longer exist (placeholder for future Ubuntu work).
+- `p10k-macos/` / `p10k-ubuntu/` — powerlevel10k configs, per OS.
+- `git/` — `.gitconfig` and (if present) `.gitignore_global`.
+- `ssh-config/` — `.ssh/config` only. Private keys live in `secrets/ssh/*.age` and land in `~/.ssh/` via `decrypt-ssh.sh`.
+- `tmux/`, `nvim/` — direct copies. Optional packages: bootstrap stows them only if the dir is non-empty.
+- `iterm2/` — NOT a stow package. iTerm2 reads its plist from this folder via the `PrefsCustomFolder` default that bootstrap sets.
+- `secrets/ssh/*.age` — `age -p` ciphertext of SSH keys. `.gitignore` blocks plaintext (`secrets/ssh/id_*`, `*.pem`) and allow-lists `*.age`.
 
 ## Conventions to preserve when editing
 
-- Both `zshrc` files use [zinit](https://github.com/zdharma-continuum/zinit) for plugin management with powerlevel10k as the prompt. Keep the zinit installer block intact at the top — it self-installs on a fresh machine.
-- `zshrc` sources `~/.config/script/git_functions.zsh` and `~/.config/script/clickhouse_functions.zsh`. New shared functions go in `script/` and must be sourced from both `zshrc`s to stay cross-OS.
-- The macOS and Ubuntu `zshrc`s have drifted (different `PATH` exports, aliases, env detection). When fixing a bug in one, check whether the other has the same bug — they are not generated from a shared template.
-- `script/clickhouse_functions.zsh` and the SSH aliases in `macos/zsh/zshrc` reference user-specific paths, hosts, and keys (e.g. `/Users/heldon/...`, internal jumpservers, `.pem` paths). Treat these as the owner's environment, not something to generalize.
+- **Bash 3.2 compatibility everywhere.** Stock macOS bash is 3.2.57. Don't use `mapfile`, `declare -A` (associative arrays), or `readlink -f`. Use parallel arrays, `realpath` (provided by `coreutils` brew), and `while IFS= read -r line; do ...; done < <(...)`. When concatenating possibly-empty arrays use `${arr[@]+"${arr[@]}"}` to avoid unbound-variable errors under `set -u`.
+- **Don't break the stow folding contract.** `~/.ssh` must be a real 700-mode directory, never a symlink — otherwise `decrypt-ssh.sh` would write plaintext keys into `ssh-config/.ssh/` inside the repo, past `.gitignore`. Bootstrap pre-creates `~/.ssh` and `~/.config` for this reason; the dry-run test asserts `~/.ssh` is not a symlink.
+- **Both zshrc files use [zinit](https://github.com/zdharma-continuum/zinit)** with powerlevel10k. The zinit self-installer block at the top of `zsh-macos/.config/zsh/zinit.zsh` must stay intact (it's how a fresh machine gets zinit).
+- **macOS uses the 6-file split** (`zsh-macos/.config/zsh/{env,zinit,prompt,functions,extras}.zsh` sourced by `.zshrc` in that order). Ubuntu does not — it remains a single `.zshrc`. They have drifted intentionally; fixing a bug on one side does NOT automatically apply to the other.
+- **Personal user-specific content is intentional.** SSH aliases (`jump`, `sr-dev`), hardcoded jumpserver hostnames, `.pem` paths under `~/.ssh/`, the encrypted key list in `secrets/ssh/` — all reference the repo owner's environment. Don't try to parameterize or generalize them.
+- **iTerm2 plist is binary.** Edit through the iTerm2 GUI (it writes back to `iterm2/com.googlecode.iterm2.plist` automatically because of the `PrefsCustomFolder` setting), not by hand.
