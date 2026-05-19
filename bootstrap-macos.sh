@@ -36,6 +36,22 @@ mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
 mkdir -p "$HOME/.config"
 [[ -d "$REPO_ROOT/nvim/.config/nvim" ]] && mkdir -p "$HOME/.config/nvim"
 
+# Write the ~/.ssh/config stub if absent. ssh-config package ships my-ssh.config
+# (the tracked clean config); the stub Include-s it. REDpass / OrbStack /
+# coral-mutagen append their own blocks below the Include into this local file,
+# which is NOT a symlink into the repo — keeping the repo free of UUIDs/Pod IPs.
+if [[ ! -f "$HOME/.ssh/config" ]]; then
+    log "Writing ~/.ssh/config Include stub"
+    cat > "$HOME/.ssh/config" <<'EOF'
+# ~/.ssh/config — bootstrap-managed stub.
+# The Include below pulls in the dotfile-tracked clean SSH config first; per
+# OpenSSH rules, options from earlier matches win. Anything REDpass / OrbStack /
+# coral-mutagen auto-appends below stays local and does NOT enter the repo.
+Include ~/.ssh/my-ssh.config
+EOF
+    chmod 600 "$HOME/.ssh/config"
+fi
+
 # Always-stow: configs that should exist on every macOS box.
 ALWAYS=(zsh-macos p10k-macos git ssh-config)
 # Optional: stow only if the package directory contains files.

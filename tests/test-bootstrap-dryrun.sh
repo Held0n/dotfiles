@@ -32,7 +32,7 @@ EXPECTED=(
     ".config/zsh/extras.zsh|zsh-macos/.config/zsh/extras.zsh"
     ".p10k.zsh|p10k-macos/.p10k.zsh"
     ".gitconfig|git/.gitconfig"
-    ".ssh/config|ssh-config/.ssh/config"
+    ".ssh/my-ssh.config|ssh-config/.ssh/my-ssh.config"
 )
 for pair in "${EXPECTED[@]}"; do
     path="$FAKE_HOME/${pair%%|*}"

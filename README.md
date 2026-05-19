@@ -9,7 +9,7 @@ Personal macOS dotfiles managed with [GNU stow](https://www.gnu.org/software/sto
 | `zsh-macos/` | `~/.zshrc` + `~/.config/zsh/*.zsh` | zsh entry + 5 ordered fragments (env, zinit, prompt, functions, extras) |
 | `p10k-macos/` | `~/.p10k.zsh` | powerlevel10k config |
 | `git/` | `~/.gitconfig` | git global config |
-| `ssh-config/` | `~/.ssh/config` | SSH config (REDpass UUID is regenerated locally; OrbStack include + coral-mutagen block are kept) |
+| `ssh-config/` | `~/.ssh/my-ssh.config` | Tracked clean SSH config. `~/.ssh/config` itself is a local stub written by bootstrap that just `Include`s this — see "stow + self-writing tools" below |
 | `tmux/` | `~/.tmux.conf` | tmux config |
 | `nvim/` | `~/.config/nvim/` | neovim config |
 | `zsh-ubuntu/`, `p10k-ubuntu/` | (Ubuntu only) | Kept for the day Ubuntu is reorganized to mirror the macOS layout |
@@ -72,7 +72,15 @@ Recommended passphrase: 6+ diceware words (or equivalent ~80 bits of entropy). a
 
 ## stow + self-writing tools
 
-`~/.ssh/config` is a symlink to the repo. Tools like **REDpass**, **OrbStack**, and the **Coral** dev-sandbox toolchain may auto-append blocks to it — that's fine, the writes land in the repo file. But review `git diff ssh-config/` before committing to avoid leaking machine-specific UUIDs or ephemeral Pod IPs.
+`~/.ssh/config` is **not** a symlink. Bootstrap writes it as a local stub whose only content is:
+
+```
+Include ~/.ssh/my-ssh.config
+```
+
+The tracked clean config lives in `ssh-config/.ssh/my-ssh.config` and is symlinked into `~/.ssh/my-ssh.config`. Tools like **REDpass**, **OrbStack**, and the **Coral** dev-sandbox toolchain auto-append blocks to `~/.ssh/config` — those writes land in the local stub, NOT the repo, so machine-specific UUIDs and ephemeral Pod IPs never enter version control. Per OpenSSH rules, options from earlier matches win, so the `Include` (read first) takes precedence over anything appended below it.
+
+`.gitignore` also blocks `ssh-config/.ssh/config` as defense-in-depth: if a future misconfiguration ever re-creates that path inside the repo, git will refuse to stage it.
 
 ## Troubleshooting
 

@@ -20,7 +20,7 @@ Each top-level directory (except `scripts/`, `tests/`, `docs/`, `secrets/`, and 
 - `zsh-ubuntu/` — verbatim copy of the old Ubuntu zshrc; NOT refactored into the 6-file split. Still sources `~/.config/script/*.zsh` paths that no longer exist (placeholder for future Ubuntu work).
 - `p10k-macos/` / `p10k-ubuntu/` — powerlevel10k configs, per OS.
 - `git/` — `.gitconfig` and (if present) `.gitignore_global`.
-- `ssh-config/` — `.ssh/config` only. Private keys live in `secrets/ssh/*.age` and land in `~/.ssh/` via `decrypt-ssh.sh`.
+- `ssh-config/` — ships `.ssh/my-ssh.config` (the tracked clean config). `~/.ssh/config` itself is a local bootstrap-written stub containing only `Include ~/.ssh/my-ssh.config`, so REDpass and other tools that auto-append to `~/.ssh/config` write into the local stub, not the repo. Private keys live in `secrets/ssh/*.age` and land in `~/.ssh/` via `decrypt-ssh.sh`.
 - `tmux/`, `nvim/` — direct copies. Optional packages: bootstrap stows them only if the dir is non-empty.
 - `iterm2/` — NOT a stow package. iTerm2 reads its plist from this folder via the `PrefsCustomFolder` default that bootstrap sets.
 - `secrets/ssh/*.age` — `age -p` ciphertext of SSH keys. `.gitignore` blocks plaintext (`secrets/ssh/id_*`, `*.pem`) and allow-lists `*.age`.
