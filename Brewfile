@@ -4,7 +4,7 @@ brew "age"
 # GNU File, Shell, and Text utilities
 brew "coreutils"
 # Modern replacement for 'ls'
-brew "exa"
+brew "eza"
 # Command-line fuzzy finder written in Go
 brew "fzf"
 # GNU grep, egrep and fgrep

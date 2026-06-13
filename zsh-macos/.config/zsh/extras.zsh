@@ -1,6 +1,6 @@
 # Aliases, focus reporting reset, bun, extra PATH entries.
 
-alias ls='exa'
+alias ls='eza'
 alias clear="clear && printf '\e[3J'"
 alias jump="ssh -i ~/.ssh/zhanghongtai-jumpserver.pem zhanghongtai@jumpserver.devops.xiaohongshu.com"
 alias sr-dev='ssh -t -i ~/.ssh/starrocks-dev root@10.4.65.79 "tmux new-session -A -s main"'
