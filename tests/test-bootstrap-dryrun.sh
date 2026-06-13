@@ -13,10 +13,20 @@ cd "$REPO_ROOT"
 mkdir -p "$FAKE_HOME/.ssh" && chmod 700 "$FAKE_HOME/.ssh"
 mkdir -p "$FAKE_HOME/.config"
 
-# Mirror the ALWAYS list from bootstrap-macos.sh
-ALWAYS=(zsh-macos p10k-macos git ssh-config karabiner)
+# Mirror bootstrap-macos.sh package lists.
+ALWAYS=(zsh-macos p10k-macos git ssh-config)
+OPTIONAL=(tmux nvim vim karabiner)
 
-stow -v -t "$FAKE_HOME" -d "$REPO_ROOT" "${ALWAYS[@]}" 2>&1
+stow_pkgs=("${ALWAYS[@]}")
+for pkg in "${OPTIONAL[@]}"; do
+    if [[ -d "$REPO_ROOT/$pkg" ]] && [[ -n "$(ls -A "$REPO_ROOT/$pkg" 2>/dev/null)" ]]; then
+        stow_pkgs+=("$pkg")
+    fi
+done
+
+for pkg in "${stow_pkgs[@]}"; do
+    stow -v -t "$FAKE_HOME" -d "$REPO_ROOT" "$pkg" 2>&1
+done
 
 # Verify each expected path resolves to its repo source. stow may fold (turn a
 # whole subdir into one symlink) or unfold (symlink each leaf file), so checking
@@ -61,4 +71,20 @@ if stow -v -t "$CONFLICT_HOME" -d "$REPO_ROOT" zsh-macos 2>/dev/null; then
     exit 1
 fi
 
-echo "PASS: stow lays down all expected symlinks; refuses conflicts"
+# Bootstrap stows packages one by one, so a conflict in one package must not
+# prevent unrelated packages from landing.
+PARTIAL_HOME="$(mktemp -d)"
+trap 'rm -rf "$FAKE_HOME" "$CONFLICT_HOME" "$PARTIAL_HOME"' EXIT
+mkdir -p "$PARTIAL_HOME/.config/karabiner"
+echo "preexisting" > "$PARTIAL_HOME/.config/karabiner/karabiner.json"
+for pkg in zsh-macos karabiner; do
+    stow -v -t "$PARTIAL_HOME" -d "$REPO_ROOT" "$pkg" 2>/dev/null || true
+done
+got="$(realpath "$PARTIAL_HOME/.zshrc" 2>/dev/null || true)"
+want="$REPO_ROOT/zsh-macos/.zshrc"
+if [[ "$got" != "$want" ]]; then
+    echo "FAIL: conflict in karabiner prevented zsh-macos from landing"
+    exit 1
+fi
+
+echo "PASS: stow lays down all expected symlinks; refuses and isolates conflicts"
