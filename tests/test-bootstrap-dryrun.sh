@@ -14,7 +14,7 @@ mkdir -p "$FAKE_HOME/.ssh" && chmod 700 "$FAKE_HOME/.ssh"
 mkdir -p "$FAKE_HOME/.config"
 
 # Mirror the ALWAYS list from bootstrap-macos.sh
-ALWAYS=(zsh-macos p10k-macos git ssh-config)
+ALWAYS=(zsh-macos p10k-macos git ssh-config karabiner)
 
 stow -v -t "$FAKE_HOME" -d "$REPO_ROOT" "${ALWAYS[@]}" 2>&1
 
@@ -30,6 +30,7 @@ EXPECTED=(
     ".config/zsh/prompt.zsh|zsh-macos/.config/zsh/prompt.zsh"
     ".config/zsh/functions.zsh|zsh-macos/.config/zsh/functions.zsh"
     ".config/zsh/extras.zsh|zsh-macos/.config/zsh/extras.zsh"
+    ".config/karabiner/karabiner.json|karabiner/.config/karabiner/karabiner.json"
     ".p10k.zsh|p10k-macos/.p10k.zsh"
     ".gitconfig|git/.gitconfig"
     ".ssh/my-ssh.config|ssh-config/.ssh/my-ssh.config"
