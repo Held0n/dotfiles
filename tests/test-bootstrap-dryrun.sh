@@ -13,7 +13,6 @@ cd "$REPO_ROOT"
 mkdir -p "$FAKE_HOME/.ssh" && chmod 700 "$FAKE_HOME/.ssh"
 mkdir -p "$FAKE_HOME/.config"
 
-# Mirror bootstrap-macos.sh package lists.
 ALWAYS=(zsh-macos p10k-macos git ssh-config)
 OPTIONAL=(tmux nvim vim karabiner)
 
