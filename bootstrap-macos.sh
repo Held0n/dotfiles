@@ -53,7 +53,7 @@ EOF
 fi
 
 # Always-stow: configs that should exist on every macOS box.
-ALWAYS=(zsh-macos p10k-macos git ssh-config)
+ALWAYS=(zsh-macos p10k-macos git ssh-config karabiner)
 # Optional: stow only if the package directory contains files.
 OPTIONAL=(tmux nvim vim karabiner)
 
