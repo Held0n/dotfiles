@@ -53,9 +53,9 @@ EOF
 fi
 
 # Always-stow: configs that should exist on every macOS box.
-ALWAYS=(zsh-macos p10k-macos git ssh-config karabiner)
+ALWAYS=(zsh-macos p10k-macos git ssh-config)
 # Optional: stow only if the package directory contains files.
-OPTIONAL=(tmux nvim vim)
+OPTIONAL=(tmux nvim vim karabiner)
 
 stow_pkgs=("${ALWAYS[@]}")
 for pkg in "${OPTIONAL[@]}"; do
@@ -65,8 +65,14 @@ for pkg in "${OPTIONAL[@]}"; do
 done
 
 log "Stowing: ${stow_pkgs[*]}"
-# stow refuses to overwrite existing non-symlink files — by design.
-stow -v -t "$HOME" -d "$REPO_ROOT" "${stow_pkgs[@]}"
+# Stow one package at a time. GNU stow aborts the whole operation when any
+# package has conflicts; isolating packages lets the rest of the bootstrap land.
+for pkg in "${stow_pkgs[@]}"; do
+    log "Stowing $pkg"
+    if ! stow -v -t "$HOME" -d "$REPO_ROOT" "$pkg"; then
+        warn "Skipping $pkg due to stow conflicts. Resolve the target files and re-run bootstrap."
+    fi
+done
 
 # --- 4. iTerm2 PrefsCustomFolder -----------------------------------------
 log "Configuring iTerm2 to load prefs from $REPO_ROOT/iterm2"
